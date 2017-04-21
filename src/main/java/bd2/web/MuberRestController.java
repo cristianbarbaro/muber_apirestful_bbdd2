@@ -28,7 +28,7 @@ public class MuberRestController {
 
 	protected Session getSession() {
 		Configuration cfg = new Configuration();
-		cfg.configure("hibernate.cfg.xml");
+		cfg.configure("hibernate/hibernate.cfg.xml");
 		SessionFactory factory = cfg.buildSessionFactory();
 		Session session = factory.openSession();
 		return session;
