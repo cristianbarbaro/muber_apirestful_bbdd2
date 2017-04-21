@@ -11,7 +11,7 @@
 			com.mysql.jdbc.Driver
 		</property>
 
-		<property name="hibernate.connection.url">jdbc:mysql://localhost:3306/grupo23</property>
+		<property name="hibernate.connection.url">jdbc:mysql://localhost:3306/grupo23?createDatabaseIfNotExist=true</property>
 		<property name="hibernate.connection.username">grupo23</property>
 		<property name="hibernate.connection.password">grupo23</property>
 		<property name="hibernate.current_session_context_class">thread</property>
@@ -19,7 +19,7 @@
 		<property name="hibernate.show_sql">true</property>
 		<property name="hibernate.format_sql">true</property>
 		
-		<property name="hibernate.hbm2ddl.auto">create</property>
+		<property name="hibernate.hbm2ddl.auto">update</property>
 
 		<!-- Incluir mappings aquí -->
 		<!-- <mapping resource="hibernate/clase.hbm.xml" /> -->
