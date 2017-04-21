@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 14/04/2017 23:51:25 by Hibernate Tools 3.5.0.Final -->
+<hibernate-mapping>
+    <class name="bd2.Muber.models.Muber" table="MUBER">
+        <id name="idMuber" type="java.lang.Long">
+            <column name="IDMUBER" />
+            <generator class="native" />
+        </id>
+        <list name="passengers" inverse="false" table="PASSENGER" lazy="true">
+            <key>
+                <column name="IDMUBER" />
+            </key>
+            <list-index></list-index>
+            <one-to-many class="bd2.Muber.models.Passenger" />
+        </list>
+        <list name="drivers" inverse="false" table="DRIVER" lazy="true">
+            <key>
+                <column name="IDMUBER" />
+            </key>
+            <list-index></list-index>
+            <one-to-many class="bd2.Muber.models.Driver" />
+        </list>
+        <list name="travels" inverse="false" table="TRAVEL" lazy="true">
+            <key>
+                <column name="IDMUBER" />
+            </key>
+            <list-index></list-index>
+            <one-to-many class="bd2.Muber.models.Travel" />
+        </list>
+    </class>
+</hibernate-mapping>
