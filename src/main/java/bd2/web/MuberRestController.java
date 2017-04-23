@@ -90,4 +90,29 @@ public class MuberRestController {
 		return new Gson().toJson(aMap);
 	}
 	
+	@RequestMapping(value = "/viajes/abiertos", method = RequestMethod.GET, produces = "application/json", headers = "Accept=application/json")
+	public String viajesAbiertos(){
+		Map<Long, Object> aMap = new HashMap<Long, Object>();
+		Muber muber = this.getMuber();
+		 List<Travel> travels = muber.getTravels();
+		 
+		 for (int i = 0; i < travels.size(); i++){
+			 Travel currentTravel = travels.get(i);
+			 // Verifico que el viaje no esté finalizado antes de agregarlo a la lista.
+			 // Falta poder listar todos los pasajeros en este viaje (se puede serializar una coleccion dentro de otra?)
+			 if (!currentTravel.isFinalized()){
+				 Map<String, Object> JSONTravel = new HashMap<String, Object>();
+				 JSONTravel.put("date", currentTravel.getDate());
+				 JSONTravel.put("origin", currentTravel.getOrigin());
+				 JSONTravel.put("destiny", currentTravel.getDestiny());
+				 JSONTravel.put("driver", currentTravel.getDriver().getUsername());
+				 JSONTravel.put("maxPassenger", currentTravel.getMaxPassengers());
+				 JSONTravel.put("totalCost", currentTravel.getTotalCost());
+				 // Agrego el JSON a otro json:
+				 aMap.put(currentTravel.getIdTravel(), JSONTravel);
+			 }
+		 }
+		 return new Gson().toJson(aMap);
+	}
+	
 }
