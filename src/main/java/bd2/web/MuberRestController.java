@@ -14,6 +14,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -48,6 +49,23 @@ public class MuberRestController {
 		Session session = factory.openSession();
 		return session;
 	}
+	
+	protected Map<String, Object> getDriverToMap(Driver driver){
+		Map<String, Object> driverMap = new HashMap<String, Object>();
+		driverMap.put("username", driver.getUsername());
+		driverMap.put("addmissionDate", driver.getAdmissionDate());
+		driverMap.put("averageScore", driver.getAverangeScore());
+		driverMap.put("licenceExpiration", driver.getLicenceExpiration());
+		return driverMap;
+	}
+	
+	protected Map<String, Object> getPassengerToMap(Passenger passenger){
+		Map<String, Object> passengerMap = new HashMap<String, Object>();
+		passengerMap.put("username", passenger.getUsername());
+		passengerMap.put("admissionDate", passenger.getAdmissionDate());
+		passengerMap.put("totalCredits", passenger.getTotalCredit());
+		return passengerMap;
+	}
 
 	@RequestMapping(value = "/conductores", method = RequestMethod.GET, produces = "application/json", headers = "Accept=application/json")
 	public String conductores() {
@@ -57,13 +75,8 @@ public class MuberRestController {
 		List<Driver> drivers = muber.getDrivers();
 		
 		for (int i = 0; i < drivers.size(); i++){
-			Map<String, Object> JSONDriver = new HashMap<String, Object>();
 			Driver currentDriver = drivers.get(i);
-			JSONDriver.put("username", currentDriver.getUsername());
-			JSONDriver.put("addmissionDate", currentDriver.getAdmissionDate());
-			JSONDriver.put("averageScore", currentDriver.getAverangeScore());
-			JSONDriver.put("licenceExpiration", currentDriver.getLicenceExpiration());
-			aMap.put(currentDriver.getIdUser(), JSONDriver);
+			aMap.put(currentDriver.getIdUser(), this.getDriverToMap(currentDriver));
 		}
 		
 		return new Gson().toJson(aMap);
@@ -77,14 +90,8 @@ public class MuberRestController {
 		List<Passenger> passengers = muber.getPassengers();
 		
 		for (int i = 0; i < passengers.size(); i++){
-			//Decido qué datos quiero mostrar (enviar la colleccion completa al HashMap generaba una excepción.
-			Map<String, Object> JSONPassenger = new HashMap<String, Object>();
 			Passenger currentPassenger = passengers.get(i);
-			JSONPassenger.put("username", currentPassenger.getUsername());
-			JSONPassenger.put("admissionDate", currentPassenger.getAdmissionDate());
-			JSONPassenger.put("totalCredits", currentPassenger.getTotalCredit());
-			aMap.put(passengers.get(i).getIdUser(), JSONPassenger);
-			
+			aMap.put(passengers.get(i).getIdUser(), this.getPassengerToMap(currentPassenger));
 		}
 		
 		return new Gson().toJson(aMap);
@@ -113,6 +120,17 @@ public class MuberRestController {
 			 }
 		 }
 		 return new Gson().toJson(aMap);
+	}
+	
+	@RequestMapping(value = "/conductores/detalles/{conductorId}", method = RequestMethod.GET, produces = "application/json", headers = "Accept=application/json")
+	public String infoConductor(@PathVariable("conductorId") long conductorId){
+		Session session = this.getSession();
+		Driver driver = (Driver) session.get(Driver.class, conductorId);
+		if (driver != null){
+			return new Gson().toJson(this.getDriverToMap(driver));
+		}
+		// Ver cómo solucionar el problema de las relaciones circulares para no usar estas funciones creadas a mano.
+		return new Gson().toJson(driver);
 	}
 	
 }
