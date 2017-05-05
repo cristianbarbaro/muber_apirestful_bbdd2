@@ -19,12 +19,12 @@
         </property>
         <!-- Subclases de la clase de USER_MUBER -->
         <union-subclass name="bd2.Muber.models.Driver" table="DRIVER">
-        	<list name="travels" inverse="true" table="TRAVEL" lazy="true">
+        	<list name="travels" inverse="true" table="TRAVEL" lazy="true" cascade="all">
         	    <key column="IDDRIVER" />
         	    <list-index></list-index>
         	    <one-to-many class="bd2.Muber.models.Travel" />
         	</list>
-        	<list name="qualifications" inverse="false" table="QUALIFICATION" lazy="true">
+        	<list name="qualifications" inverse="false" table="QUALIFICATION" lazy="true" cascade="all">
         	    <key column="IDDRIVER" />
         	    <list-index></list-index>
         	    <one-to-many class="bd2.Muber.models.Qualification" />
@@ -34,7 +34,7 @@
         	</property>
 		</union-subclass>
 		<union-subclass name="bd2.Muber.models.Passenger" table="PASSENGER">
-	        <list name="travels" inverse="true" table="TRAVEL_PASSENGER" lazy="true">
+	        <list name="travels" inverse="true" table="TRAVEL_PASSENGER" lazy="true" cascade="all">
         	    <key column="IDPASSENGER" />
 	            <list-index></list-index>
 	            <many-to-many column="IDTRAVEL" 

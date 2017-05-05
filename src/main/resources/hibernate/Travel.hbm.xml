@@ -26,7 +26,7 @@
         <property name="finalized" type="boolean">
             <column name="FINALIZED" />
         </property>
-        <list name="passengers" table="TRAVEL_PASSENGER" lazy="true">
+        <list name="passengers" table="TRAVEL_PASSENGER" lazy="true" cascade="all">
             <key column="IDTRAVEL" />
             <list-index></list-index>
             <many-to-many column="IDPASSENGER" 
