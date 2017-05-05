@@ -28,6 +28,10 @@ public class Driver extends User {
 		this.travels.add(t);
 		return t;
 	}
+	
+	public void addTravel(Travel travel){
+		this.getTravels().add(travel);
+	}
 
 	public void addQualification(Qualification qualification) {
 		this.qualifications.add(qualification);
