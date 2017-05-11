@@ -32,7 +32,7 @@
             <many-to-many column="IDPASSENGER" 
             	class="bd2.Muber.models.Passenger" />
         </list>
-        <many-to-one name="driver" class="bd2.Muber.models.Driver" fetch="join">
+        <many-to-one name="driver" class="bd2.Muber.models.Driver" fetch="join" cascade="all">
             <column name="IDDRIVER" />
         </many-to-one>
     </class>

@@ -2,6 +2,7 @@ package bd2.web;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -199,16 +200,7 @@ public class MuberRestController {
 	
 	@RequestMapping(value = "/viajes/nuevo", method = RequestMethod.POST, produces = "application/json", headers = "Accept=application/json,application/xml", consumes = {"application/xml", "application/json"} )
 //	@ResponseBody
-	public ResponseEntity<String> crearViaje(@RequestBody Travel travel){
-	/*public HttpStatus crearViaje(
-				@RequestParam("driver") long driverId,
-				@RequestParam("destiny") String destiny,
-				@RequestParam("origin") String origin,
-				@RequestParam("maxPassengers") int maxPassengers,
-				@RequestParam("totalCost") float totalCost
-			)
-	{*/
-	
+	public ResponseEntity<String> crearViaje(@RequestBody Travel travel){	
 		/*
 		 * {
 			  "destiny": "La Plata",
@@ -217,25 +209,24 @@ public class MuberRestController {
 			  "totalCost" : 8000,
 			  "driver": { "idDriver": 4 }
 			}
-		 * 
 		 */
-		
-		// Chequear si existe:
 		Session session = this.getSession();
+		// Iniciamos la transacción
+		Transaction t = session.beginTransaction();
 		Driver driver = (Driver) session.get(Driver.class, travel.getDriver().getIdDriver());
+		// Chequear si existe el conductor:
 		if (driver == null){
-			return error(HttpStatus.NOT_FOUND, "No existe el conductorId");
+			return error(HttpStatus.NOT_FOUND, "No existe el conductor");
 		}
-		//System.out.println(travel.getDriver());
-		/*
-		Driver driver = (Driver) session.get(Driver.class, travel.getDriver().getIdDriver());
-		//Travel travel = new Travel(driver, origin, destiny, maxPassengers, totalCost);
-		
-		Muber muber = this.getMuber();
-		driver.addTravel(travel);
+		// Ahora recupero Muber (la aplicación) para agregarle el viaje.
+		Muber muber = (Muber) session.get(Muber.class, (long) 1);
+		//driver.addTravel(travel);
+		Date date = new Date();
+		travel.setDate(date);
+		travel.setDriver(driver);
 		muber.addTravel(travel);
+		t.commit();
 		session.close();
-		*/
 		return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
 	}
 	
