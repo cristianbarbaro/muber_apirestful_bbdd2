@@ -152,11 +152,35 @@ public class MuberRestController {
 		if (passenger.addTravel(travel)) {
 			/* se agrego correctamente */
 			t.commit();
-			session.save(passenger);
+			session.close();
 			return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
 		}
 		/* no se pudo agregar por  */
 		return error(HttpStatus.BAD_REQUEST, "No se puede agregar el pasajero al viaje indicado.");
+	}
+	
+	@RequestMapping(value = "/viajes/calificar", method = RequestMethod.POST, produces = "application/json", headers = "Accept=application/json,application/xml", consumes = {"application/xml", "application/json"} )
+//	@ResponseBody
+	public ResponseEntity<String> calificarViaje(@RequestBody Qualification qualification){	
+		/*
+		 * {
+			  "points": 2,
+			  "comment": "El Peligrwwwo",
+			  "travel" : { "idTravel": 1 },
+			  "passenger": { "idPassenger": 3 }
+			}
+		*/
+		Session session = this.getSession();
+		Transaction t = session.beginTransaction();
+		Passenger passenger = (Passenger) session.get(Passenger.class, qualification.getPassenger().getIdPassenger());
+		Travel travel = (Travel) session.get(Travel.class, qualification.getTravel().getIdTravel());
+		if (passenger == null){
+			return error(HttpStatus.NOT_FOUND, "No existe el passengerId");
+		}
+		passenger.qualify(travel, qualification);
+		t.commit();
+		session.close();
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
 	}
 	
 	@RequestMapping(value = "/conductores/detalle/{conductorId}", method = RequestMethod.GET, produces = "application/json", headers = "Accept=application/json")

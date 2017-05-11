@@ -30,6 +30,12 @@ public class Passenger extends User {
 		return new Qualification(points, comment, this, travel);
 	}
 
+	public void qualify(Travel travel, Qualification qualification) {
+		qualification.setTravel(travel);
+		qualification.setPassenger(this);
+		travel.getDriver().addQualification(qualification);
+	}
+
 	public void charge(float cost) {
 		this.totalCredit -= cost;
 	}
