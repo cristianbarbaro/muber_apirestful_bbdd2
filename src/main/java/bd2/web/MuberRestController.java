@@ -177,6 +177,9 @@ public class MuberRestController {
 		if (passenger == null){
 			return error(HttpStatus.NOT_FOUND, "No existe el passengerId");
 		}
+		if (travel == null){
+			return error(HttpStatus.NOT_FOUND, "No existe el travelId");
+		}
 		passenger.qualify(travel, qualification);
 		t.commit();
 		session.close();
