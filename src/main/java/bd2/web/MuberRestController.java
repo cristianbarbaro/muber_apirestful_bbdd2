@@ -13,6 +13,9 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
+import org.json.JSONObject;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -66,6 +69,13 @@ public class MuberRestController {
 		passengerMap.put("totalCredits", passenger.getTotalCredit());
 		return passengerMap;
 	}
+	
+	protected ResponseEntity<String> error(HttpStatus code, String message){
+		JSONObject json = new JSONObject();
+		json.put("code", code.value());
+		json.put("message", message);
+		return ResponseEntity.status(code).body(json.toString());
+	}
 
 	@RequestMapping(value = "/conductores", method = RequestMethod.GET, produces = "application/json", headers = "Accept=application/json")
 	public String conductores() {
@@ -114,6 +124,7 @@ public class MuberRestController {
 				 JSONTravel.put("destiny", currentTravel.getDestiny());
 				 JSONTravel.put("driver", currentTravel.getDriver().getUsername());
 				 JSONTravel.put("maxPassenger", currentTravel.getMaxPassengers());
+				 JSONTravel.put("passengerCount", currentTravel.getPassengers().size());
 				 JSONTravel.put("totalCost", currentTravel.getTotalCost());
 				 // Agrego el JSON a otro json:
 				 aMap.put(currentTravel.getIdTravel(), JSONTravel);
@@ -121,8 +132,31 @@ public class MuberRestController {
 		 }
 		 return new Gson().toJson(aMap);
 	}
+
+
+	@ResponseBody
+	@RequestMapping(value = "/viajes/{viajeId}/agregarPasajero/{pasajeroId}", method = RequestMethod.PUT, produces = "application/json", headers = "Accept=application/json")
+	public ResponseEntity<String> agregarPasajero(@PathVariable("viajeId") long viajeId, @PathVariable("pasajeroId") long pasajeroId){
+		Session session = this.getSession();
+		Travel travel = (Travel) session.get(Travel.class, viajeId);
+		Passenger passenger = (Passenger) session.get(Passenger.class, pasajeroId);
+		if (travel == null) {
+			/* no existe el viaje */
+			return error(HttpStatus.NOT_FOUND, "No existe el travelId.");
+		}
+		if (passenger == null) {
+			/* no existe el pasajero */
+			return error(HttpStatus.NOT_FOUND, "No existe el pasajeroId.");
+		}
+		if (travel.addPassenger(passenger)) {
+			/* se agrego correctamente */
+			return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+		}
+		/* no se pudo agregar por  */
+		return error(HttpStatus.BAD_REQUEST, "No se puede agregar el pasajero al viaje indicado.");
+	}
 	
-	@RequestMapping(value = "/conductores/detalles/{conductorId}", method = RequestMethod.GET, produces = "application/json", headers = "Accept=application/json")
+	@RequestMapping(value = "/conductores/detalle/{conductorId}", method = RequestMethod.GET, produces = "application/json", headers = "Accept=application/json")
 	public String infoConductor(@PathVariable("conductorId") long conductorId){
 		Session session = this.getSession();
 		Driver driver = (Driver) session.get(Driver.class, conductorId);
