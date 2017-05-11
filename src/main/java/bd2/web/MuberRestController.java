@@ -138,6 +138,7 @@ public class MuberRestController {
 	@RequestMapping(value = "/viajes/{viajeId}/agregarPasajero/{pasajeroId}", method = RequestMethod.PUT, produces = "application/json", headers = "Accept=application/json")
 	public ResponseEntity<String> agregarPasajero(@PathVariable("viajeId") long viajeId, @PathVariable("pasajeroId") long pasajeroId){
 		Session session = this.getSession();
+		Transaction t = session.beginTransaction();
 		Travel travel = (Travel) session.get(Travel.class, viajeId);
 		Passenger passenger = (Passenger) session.get(Passenger.class, pasajeroId);
 		if (travel == null) {
@@ -148,8 +149,10 @@ public class MuberRestController {
 			/* no existe el pasajero */
 			return error(HttpStatus.NOT_FOUND, "No existe el pasajeroId.");
 		}
-		if (travel.addPassenger(passenger)) {
+		if (passenger.addTravel(travel)) {
 			/* se agrego correctamente */
+			t.commit();
+			session.save(passenger);
 			return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
 		}
 		/* no se pudo agregar por  */
