@@ -167,4 +167,46 @@ public class MuberRestController {
 		return new Gson().toJson(driver);
 	}
 	
+	@RequestMapping(value = "/viajes/nuevo", method = RequestMethod.POST, produces = "application/json", headers = "Accept=application/json,application/xml", consumes = {"application/xml", "application/json"} )
+//	@ResponseBody
+	public ResponseEntity<String> crearViaje(@RequestBody Travel travel){
+	/*public HttpStatus crearViaje(
+				@RequestParam("driver") long driverId,
+				@RequestParam("destiny") String destiny,
+				@RequestParam("origin") String origin,
+				@RequestParam("maxPassengers") int maxPassengers,
+				@RequestParam("totalCost") float totalCost
+			)
+	{*/
+	
+		/*
+		 * {
+			  "destiny": "La Plata",
+			  "origin": "El Peligro",
+			  "maxPassengers" : 6,
+			  "totalCost" : 8000,
+			  "driver": { "idDriver": 4 }
+			}
+		 * 
+		 */
+		
+		// Chequear si existe:
+		Session session = this.getSession();
+		Driver driver = (Driver) session.get(Driver.class, travel.getDriver().getIdDriver());
+		if (driver == null){
+			return error(HttpStatus.NOT_FOUND, "No existe el conductorId");
+		}
+		//System.out.println(travel.getDriver());
+		/*
+		Driver driver = (Driver) session.get(Driver.class, travel.getDriver().getIdDriver());
+		//Travel travel = new Travel(driver, origin, destiny, maxPassengers, totalCost);
+		
+		Muber muber = this.getMuber();
+		driver.addTravel(travel);
+		muber.addTravel(travel);
+		session.close();
+		*/
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+	}
+	
 }
