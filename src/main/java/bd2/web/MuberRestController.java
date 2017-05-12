@@ -7,12 +7,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.criterion.Projections;
 import org.hibernate.service.ServiceRegistry;
 import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import com.google.gson.Gson;
@@ -36,11 +39,13 @@ import bd2.Muber.models.*;
 @EnableWebMvc
 public class MuberRestController {
 
-	protected Muber getMuber(){
-		Session session = this.getSession();
-		//Esto debe mejorarse... El tipo del id no puede ser Integer.
-		Long id = (long) 1;
-		Muber muber = (Muber) session.get(Muber.class, id);
+	protected Muber getMuber(Session session){
+		Criteria criteria = session
+		    .createCriteria(Muber.class)
+		    .setProjection(Projections.max("idMuber"));
+		long maxIdMuber = (long) criteria.uniqueResult();
+		Muber muber = (Muber) session.get(Muber.class, maxIdMuber);
+		//session.close();
 		return muber;
 	}
 	
@@ -58,7 +63,7 @@ public class MuberRestController {
 		Map<String, Object> driverMap = new HashMap<String, Object>();
 		driverMap.put("username", driver.getUsername());
 		driverMap.put("addmissionDate", driver.getAdmissionDate());
-		driverMap.put("averageScore", driver.getAverangeScore());
+		driverMap.put("averageScore", driver.getQualificationAverange());
 		driverMap.put("licenceExpiration", driver.getLicenceExpiration());
 		return driverMap;
 	}
@@ -71,51 +76,68 @@ public class MuberRestController {
 		return passengerMap;
 	}
 	
-	protected ResponseEntity<String> error(HttpStatus code, String message){
+	protected ResponseEntity<?> response(HttpStatus code, String message){
+		JSONObject json = new JSONObject();
+		json.put("code", code.value());
+		json.put("message", message);
+		return ResponseEntity.status(code).body(json.toString());
+	}
+	
+	protected ResponseEntity<?> response(HttpStatus code, Map message){
 		JSONObject json = new JSONObject();
 		json.put("code", code.value());
 		json.put("message", message);
 		return ResponseEntity.status(code).body(json.toString());
 	}
 
-	@RequestMapping(value = "/conductores", method = RequestMethod.GET, produces = "application/json", headers = "Accept=application/json")
-	public String conductores() {
+	
+	protected ResponseEntity<?> response(HttpStatus code, JSONObject message){
+		JSONObject json = new JSONObject();
+		json.put("code", code.value());
+		json.put("message", message);
+		return ResponseEntity.status(code).body(json.toString());
+	}
+	
+	protected ResponseEntity<?> response(){
+		JSONObject json = new JSONObject();
+		json.put("code", HttpStatus.NO_CONTENT.value());
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).body(json.toString());
+	}
+
+	@RequestMapping(value = "/pasajeros", method = RequestMethod.GET, produces = "application/json")
+	public String pasajeros() {
 		Map<Long, Object> aMap = new HashMap<Long, Object>();
-		//aMap.put("result", "OK");
-		Muber muber = this.getMuber();
-		List<Driver> drivers = muber.getDrivers();
-		
-		for (int i = 0; i < drivers.size(); i++){
-			Driver currentDriver = drivers.get(i);
-			aMap.put(currentDriver.getIdUser(), this.getDriverToMap(currentDriver));
+		Session session = this.getSession();
+		Muber muber = this.getMuber(session);
+		List<Passenger> passengers = muber.getPassengers();
+		for ( Passenger currentPassenger : passengers ){
+			aMap.put(currentPassenger.getIdUser(), this.getPassengerToMap(currentPassenger));
 		}
-		
+		session.close();
 		return new Gson().toJson(aMap);
 	}
 
-	@RequestMapping(value = "/pasajeros", method = RequestMethod.GET, produces = "application/json", headers = "Accept=application/json")
-	public String pasajeros() {
+	@RequestMapping(value = "/conductores", method = RequestMethod.GET, produces = "application/json" )
+	public String conductores() {
 		Map<Long, Object> aMap = new HashMap<Long, Object>();
-		Muber muber = this.getMuber();
-		
-		List<Passenger> passengers = muber.getPassengers();
-		
-		for (int i = 0; i < passengers.size(); i++){
-			Passenger currentPassenger = passengers.get(i);
-			aMap.put(passengers.get(i).getIdUser(), this.getPassengerToMap(currentPassenger));
+		Session session = this.getSession();
+		Muber muber = this.getMuber(session);
+		List<Driver> drivers = muber.getDrivers();
+		for ( Driver currentDriver : drivers ){
+			aMap.put(currentDriver.getIdUser(), this.getDriverToMap(currentDriver));
 		}
-		
+		session.close();
 		return new Gson().toJson(aMap);
 	}
 	
-	@RequestMapping(value = "/viajes/abiertos", method = RequestMethod.GET, produces = "application/json", headers = "Accept=application/json")
+	@RequestMapping(value = "/viajes/abiertos", method = RequestMethod.GET, produces = "application/json" )
 	public String viajesAbiertos(){
 		Map<Long, Object> aMap = new HashMap<Long, Object>();
-		Muber muber = this.getMuber();
+		Session session = this.getSession();
+		Muber muber = this.getMuber(session);
 		 List<Travel> travels = muber.getTravels();
 		 
-		 for (int i = 0; i < travels.size(); i++){
-			 Travel currentTravel = travels.get(i);
+		 for ( Travel currentTravel : travels ){
 			 // Verifico que el viaje no esté finalizado antes de agregarlo a la lista.
 			 // Falta poder listar todos los pasajeros en este viaje (se puede serializar una coleccion dentro de otra?)
 			 if (!currentTravel.isFinalized()){
@@ -131,55 +153,30 @@ public class MuberRestController {
 				 aMap.put(currentTravel.getIdTravel(), JSONTravel);
 			 }
 		 }
+		 session.close();
 		 return new Gson().toJson(aMap);
 	}
 
-
-	@ResponseBody
-	@RequestMapping(value = "/viajes/{viajeId}/agregarPasajero/{pasajeroId}", method = RequestMethod.PUT, produces = "application/json", headers = "Accept=application/json")
-	public ResponseEntity<String> agregarPasajero(@PathVariable("viajeId") long viajeId, @PathVariable("pasajeroId") long pasajeroId){
-		Session session = this.getSession();
-		Transaction t = session.beginTransaction();
-		Travel travel = (Travel) session.get(Travel.class, viajeId);
-		Passenger passenger = (Passenger) session.get(Passenger.class, pasajeroId);
-		if (travel == null) {
-			/* no existe el viaje */
-			return error(HttpStatus.NOT_FOUND, "No existe el travelId.");
-		}
-		if (passenger == null) {
-			/* no existe el pasajero */
-			return error(HttpStatus.NOT_FOUND, "No existe el pasajeroId.");
-		}
-		if (passenger.addTravel(travel)) {
-			/* se agrego correctamente */
-			t.commit();
-			session.close();
-			return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
-		}
-		/* no se pudo agregar por  */
-		return error(HttpStatus.BAD_REQUEST, "No se puede agregar el pasajero al viaje indicado.");
-	}
 	
+	/*
+	 * {
+		  "points": 2,
+		  "comment": "El Peligrwwwo",
+		  "travel" : { "idTravel": 1 },
+		  "passenger": { "idPassenger": 3 }
+		}
+	*/
 	@RequestMapping(value = "/viajes/calificar", method = RequestMethod.POST, produces = "application/json", headers = "Accept=application/json,application/xml", consumes = {"application/xml", "application/json"} )
-//	@ResponseBody
-	public ResponseEntity<String> calificarViaje(@RequestBody Qualification qualification){	
-		/*
-		 * {
-			  "points": 2,
-			  "comment": "El Peligrwwwo",
-			  "travel" : { "idTravel": 1 },
-			  "passenger": { "idPassenger": 3 }
-			}
-		*/
+	public ResponseEntity<?> calificarViaje(@RequestBody Qualification qualification){	
 		Session session = this.getSession();
 		Transaction t = session.beginTransaction();
 		Passenger passenger = (Passenger) session.get(Passenger.class, qualification.getPassenger().getIdPassenger());
 		Travel travel = (Travel) session.get(Travel.class, qualification.getTravel().getIdTravel());
 		if (passenger == null){
-			return error(HttpStatus.NOT_FOUND, "No existe el passengerId");
+			return this.response(HttpStatus.NOT_FOUND, "No existe el passengerId");
 		}
 		if (travel == null){
-			return error(HttpStatus.NOT_FOUND, "No existe el travelId");
+			return this.response(HttpStatus.NOT_FOUND, "No existe el travelId");
 		}
 		passenger.qualify(travel, qualification);
 		t.commit();
@@ -197,26 +194,27 @@ public class MuberRestController {
 		// Ver cómo solucionar el problema de las relaciones circulares para no usar estas funciones creadas a mano.
 		return new Gson().toJson(driver);
 	}
+
 	
+
+	/*
+	 * {
+		  "destiny": "La Plata",
+		  "origin": "El Peligro",
+		  "maxPassengers" : 6,
+		  "totalCost" : 8000,
+		  "driver": { "idDriver": 4 }
+		}
+	 */
 	@RequestMapping(value = "/viajes/nuevo", method = RequestMethod.POST, produces = "application/json", headers = "Accept=application/json,application/xml", consumes = {"application/xml", "application/json"} )
-//	@ResponseBody
-	public ResponseEntity<String> crearViaje(@RequestBody Travel travel){	
-		/*
-		 * {
-			  "destiny": "La Plata",
-			  "origin": "El Peligro",
-			  "maxPassengers" : 6,
-			  "totalCost" : 8000,
-			  "driver": { "idDriver": 4 }
-			}
-		 */
+	public ResponseEntity<?> crearViaje(@RequestBody Travel travel){	
 		Session session = this.getSession();
 		// Iniciamos la transacción
 		Transaction t = session.beginTransaction();
 		Driver driver = (Driver) session.get(Driver.class, travel.getDriver().getIdDriver());
 		// Chequear si existe el conductor:
 		if (driver == null){
-			return error(HttpStatus.NOT_FOUND, "No existe el conductor");
+			return this.response(HttpStatus.NOT_FOUND, "No existe el conductor");
 		}
 		// Ahora recupero Muber (la aplicación) para agregarle el viaje.
 		Muber muber = (Muber) session.get(Muber.class, (long) 1);
@@ -227,7 +225,75 @@ public class MuberRestController {
 		muber.addTravel(travel);
 		t.commit();
 		session.close();
-		return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+		return this.response();
+	}
+
+	@RequestMapping(value = "/viajes/agregarPasajero", method = RequestMethod.PUT, produces = "application/json")
+	public ResponseEntity<?> agregarPasajero(@RequestParam long viajeId, @RequestParam long pasajeroId){
+		Session session = this.getSession();
+		Transaction t = session.beginTransaction();
+		Travel travel = (Travel) session.get(Travel.class, viajeId);//Long.parseLong(request.getParameter("viajeId")));
+		Passenger passenger = (Passenger) session.get(Passenger.class, pasajeroId);//Long.parseLong(request.getParameter("pasajeroId")));
+		if (travel == null) {
+			/* no existe el viaje */
+			return this.response(HttpStatus.NOT_FOUND, "No existe el travelId.");
+		}
+		if (passenger == null) {
+			/* no existe el pasajero */
+			return this.response(HttpStatus.NOT_FOUND, "No existe el pasajeroId.");
+		}
+		if (passenger.addTravel(travel)) {
+			/* se agrego correctamente */
+			t.commit();
+			session.close();
+			return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+		}
+		/* no se pudo agregar por  */
+		return this.response(HttpStatus.BAD_REQUEST, "No se puede agregar el pasajero al viaje indicado.");
 	}
 	
+	@RequestMapping(value = "/pasajeros/cargarCredito", method = RequestMethod.PUT, produces = "application/json" )
+	public ResponseEntity<?> cargarCredito(@RequestParam("passengerId") long passengerId, @RequestParam("amount") long amount){
+		//System.out.println(passengerId);
+		//System.out.println(amount);
+		Session session = this.getSession();
+		Transaction t = session.beginTransaction();
+		Passenger passenger = (Passenger) session.get(Passenger.class, passengerId);
+		if (passenger == null){
+			return this.response(HttpStatus.NOT_FOUND, "No existe el passengerId");
+		}
+		passenger.setTotalCredit(passenger.getTotalCredit() + amount);
+		t.commit();
+		session.close();
+		return ResponseEntity.status(HttpStatus.OK).body(null); //devolver passenger
+	}
+
+	@RequestMapping(value = "/viajes/finalizar", method = RequestMethod.PUT, produces = "application/json" )
+	public ResponseEntity<?> finalizarViaje(@RequestParam("travelId") long travelId){
+		Session session = this.getSession();
+		Transaction t = session.beginTransaction();
+		Travel travel = (Travel) session.get(Travel.class, travelId);
+		if (travel == null){
+			return this.response(HttpStatus.NOT_FOUND, "No existe el travelId");
+		}
+		if (travel.isFinalized()){
+			return this.response(HttpStatus.ALREADY_REPORTED, "Ya se encuentra finalizado");
+		}
+		travel.finalize();
+		t.commit();
+		session.close();
+		return this.response();
+	}
+
+	@RequestMapping(value = "/conductores/top10", method = RequestMethod.GET, produces = "application/json" )
+	public ResponseEntity<?> conductoresTop10(){
+		Session session = this.getSession();
+		List<Driver> top10 = this.getMuber(session).getTop10DriversWithoutOpenTravels();
+		Map<Long, Object> aMap = new HashMap<Long, Object>();
+		for ( Driver currentDriver : top10 ){
+			aMap.put(currentDriver.getIdUser(), this.getDriverToMap(currentDriver));
+		}
+		session.close();
+		return this.response(HttpStatus.OK, aMap);
+	}
 }

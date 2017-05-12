@@ -39,6 +39,7 @@ public class Travel {
 	}
 	
 	public void finalize() {
+		this.finalized = true;
 		float cost = this.totalCost / this.passengers.size();
 		for (Iterator<Passenger> i = this.passengers.iterator(); i.hasNext();) {
 			i.next().charge(cost);

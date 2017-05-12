@@ -1,6 +1,8 @@
 package bd2.Muber.models;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 public class Muber {
@@ -21,6 +23,22 @@ public class Muber {
 		this.passengers = passengers;
 		this.drivers = drivers;
 		this.travels = travels;
+	}
+	
+	public List<Driver> getTop10DriversWithoutOpenTravels(){
+		List<Driver> top10 = new ArrayList<Driver>();
+		for (Driver currentDriver : this.drivers){
+			if (!currentDriver.hasOpenTravels()){
+				top10.add(currentDriver);
+			}
+		}
+		top10.sort(new Comparator<Driver>() {
+			public int compare(Driver d1, Driver d2){
+				return d1.getQualificationAverange().compareTo(d2.getQualificationAverange());
+			}
+		});
+		
+		return (List<Driver>) top10.subList(0, top10.size() > 10? 10 : top10.size() );
 	}
 	
 	public void addDriver(Driver driver){

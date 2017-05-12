@@ -20,6 +20,24 @@ public class Driver extends User {
 		this.qualifications = new ArrayList<Qualification>();
 		this.licenceExpiration = licenceExpiration;
 	}
+	
+	public Float getQualificationAverange() {
+		int tot = 0;
+		for (Qualification q : this.qualifications) {
+			tot += q.getPoints();
+		}
+		return (float) (tot / this.qualifications.size());
+	}
+
+	public Float getBestQualificationPoints() {
+		int topPoints = 0;
+		for (Qualification q : this.qualifications) {
+			if (topPoints < q.getPoints()){
+				topPoints = q.getPoints();
+			}
+		}
+		return (float) topPoints;
+	}
 
 	public Travel createTravel(String origin, String destiny, int passengers, float cost) {
 		if (this.licenceExpiration.before(new Date()))
@@ -29,7 +47,7 @@ public class Driver extends User {
 		return t;
 	}
 	
-	public void addTravel(Travel travel){
+	public void addTravel(Travel travel) {
 		this.getTravels().add(travel);
 	}
 
@@ -37,12 +55,12 @@ public class Driver extends User {
 		this.qualifications.add(qualification);
 	}
 	
-	public float getAverangeScore() {
-		int total = 0;
-		for (Iterator<Qualification> i = this.qualifications.iterator(); i.hasNext();) {
-			total += i.next().getPoints();
+	public boolean hasOpenTravels() {
+		for (Travel currentTravel : this.travels){
+			if (!currentTravel.isFinalized())
+				return true;
 		}
-		return total / this.qualifications.size(); 
+		return false;
 	}
 
 	public Long getIdDriver() {
