@@ -105,7 +105,7 @@ public class MuberRestController {
 	}
 
 	@RequestMapping(value = "/pasajeros", method = RequestMethod.GET, produces = "application/json")
-	public String pasajeros() {
+	public ResponseEntity<?> pasajeros() {
 		Map<Long, Object> aMap = new HashMap<Long, Object>();
 		Session session = this.getSession();
 		Muber muber = this.getMuber(session);
@@ -114,11 +114,11 @@ public class MuberRestController {
 			aMap.put(currentPassenger.getIdUser(), this.getPassengerToMap(currentPassenger));
 		}
 		session.close();
-		return new Gson().toJson(aMap);
+		return this.response(HttpStatus.OK, aMap);
 	}
 
 	@RequestMapping(value = "/conductores", method = RequestMethod.GET, produces = "application/json" )
-	public String conductores() {
+	public ResponseEntity<?> conductores() {
 		Map<Long, Object> aMap = new HashMap<Long, Object>();
 		Session session = this.getSession();
 		Muber muber = this.getMuber(session);
@@ -127,7 +127,7 @@ public class MuberRestController {
 			aMap.put(currentDriver.getIdUser(), this.getDriverToMap(currentDriver));
 		}
 		session.close();
-		return new Gson().toJson(aMap);
+		return this.response(HttpStatus.OK, aMap);
 	}
 	
 	@RequestMapping(value = "/viajes/abiertos", method = RequestMethod.GET, produces = "application/json" )
@@ -135,26 +135,29 @@ public class MuberRestController {
 		Map<Long, Object> aMap = new HashMap<Long, Object>();
 		Session session = this.getSession();
 		Muber muber = this.getMuber(session);
-		 List<Travel> travels = muber.getTravels();
-		 
-		 for ( Travel currentTravel : travels ){
-			 // Verifico que el viaje no esté finalizado antes de agregarlo a la lista.
-			 // Falta poder listar todos los pasajeros en este viaje (se puede serializar una coleccion dentro de otra?)
-			 if (!currentTravel.isFinalized()){
-				 Map<String, Object> JSONTravel = new HashMap<String, Object>();
-				 JSONTravel.put("date", currentTravel.getDate());
-				 JSONTravel.put("origin", currentTravel.getOrigin());
-				 JSONTravel.put("destiny", currentTravel.getDestiny());
-				 JSONTravel.put("driver", currentTravel.getDriver().getUsername());
-				 JSONTravel.put("maxPassenger", currentTravel.getMaxPassengers());
-				 JSONTravel.put("passengerCount", currentTravel.getPassengers().size());
-				 JSONTravel.put("totalCost", currentTravel.getTotalCost());
-				 // Agrego el JSON a otro json:
-				 aMap.put(currentTravel.getIdTravel(), JSONTravel);
-			 }
-		 }
-		 session.close();
-		 return new Gson().toJson(aMap);
+		List<Travel> travels = muber.getTravels();
+		//System.out.println(muber.getDrivers().size());
+		//System.out.println(muber.getTravels().size());
+		//System.out.println(muber.getPassengers().size());
+		for ( Travel currentTravel : travels ){
+			// Verifico que el viaje no esté finalizado antes de agregarlo a la lista.
+			// Falta poder listar todos los pasajeros en este viaje (se puede serializar una coleccion dentro de otra?)
+			//System.out.println(currentTravel.getIdTravel());
+			if (!currentTravel.isFinalized()){
+				Map<String, Object> JSONTravel = new HashMap<String, Object>();
+				JSONTravel.put("date", currentTravel.getDate());
+				JSONTravel.put("origin", currentTravel.getOrigin());
+				JSONTravel.put("destiny", currentTravel.getDestiny());
+				JSONTravel.put("driver", currentTravel.getDriver().getUsername());
+				JSONTravel.put("maxPassenger", currentTravel.getMaxPassengers());
+				JSONTravel.put("passengerCount", currentTravel.getPassengers().size());
+				JSONTravel.put("totalCost", currentTravel.getTotalCost());
+				// Agrego el JSON a otro json:
+				aMap.put(currentTravel.getIdTravel(), JSONTravel);
+			}
+		}
+		session.close();
+		return new Gson().toJson(aMap);
 	}
 
 	

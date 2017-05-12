@@ -26,6 +26,9 @@ public class Driver extends User {
 		for (Qualification q : this.qualifications) {
 			tot += q.getPoints();
 		}
+		if (this.getQualifications().isEmpty()){
+			return (float) tot;
+		}
 		return (float) (tot / this.qualifications.size());
 	}
 
