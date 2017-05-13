@@ -54,9 +54,9 @@ public class App {
 		Travel viaje11 = abierto.createTravel("Ensenada", "La Plata", 3, 300);
 		
 		/**** Algunos pasajeros ***/
-		Passenger german = new Passenger("german", "ger", 1500);
-		Passenger alicia = new Passenger("alicia", "ali", 1500);
-		Passenger margarita = new Passenger("margarita", "mar", 1500);
+		Passenger german = new Passenger("german", "ger", 20000);
+		Passenger alicia = new Passenger("alicia", "ali", 15000);
+		Passenger margarita = new Passenger("margarita", "mar", 15000);
 		german.addTravel(viaje11);
 		alicia.addTravel(viaje11);
 		margarita.addTravel(viaje11);

@@ -131,33 +131,36 @@ public class MuberRestController {
 	}
 	
 	@RequestMapping(value = "/viajes/abiertos", method = RequestMethod.GET, produces = "application/json" )
-	public String viajesAbiertos(){
+	public ResponseEntity<?> viajesAbiertos(){
 		Map<Long, Object> aMap = new HashMap<Long, Object>();
 		Session session = this.getSession();
 		Muber muber = this.getMuber(session);
-		List<Travel> travels = muber.getTravels();
-		//System.out.println(muber.getDrivers().size());
-		//System.out.println(muber.getTravels().size());
-		//System.out.println(muber.getPassengers().size());
-		for ( Travel currentTravel : travels ){
-			// Verifico que el viaje no esté finalizado antes de agregarlo a la lista.
-			// Falta poder listar todos los pasajeros en este viaje (se puede serializar una coleccion dentro de otra?)
-			//System.out.println(currentTravel.getIdTravel());
-			if (!currentTravel.isFinalized()){
-				Map<String, Object> JSONTravel = new HashMap<String, Object>();
-				JSONTravel.put("date", currentTravel.getDate());
-				JSONTravel.put("origin", currentTravel.getOrigin());
-				JSONTravel.put("destiny", currentTravel.getDestiny());
-				JSONTravel.put("driver", currentTravel.getDriver().getUsername());
-				JSONTravel.put("maxPassenger", currentTravel.getMaxPassengers());
-				JSONTravel.put("passengerCount", currentTravel.getPassengers().size());
-				JSONTravel.put("totalCost", currentTravel.getTotalCost());
-				// Agrego el JSON a otro json:
-				aMap.put(currentTravel.getIdTravel(), JSONTravel);
+		// TODO: Esto no me está devolviendo todos los viajes asociados a Muber, solo uno, siempre el último de la base de datos. REVISAR.
+		//List<Travel> travels = muber.getTravels();
+		List<Driver> drivers = muber.getDrivers();
+		
+		for (Driver currentDriver: drivers){
+			List<Travel> travels = currentDriver.getTravels();
+			for ( Travel currentTravel : travels ){
+				// Verifico que el viaje no esté finalizado antes de agregarlo a la lista.
+				// Falta poder listar todos los pasajeros en este viaje (se puede serializar una coleccion dentro de otra?)
+				if (!currentTravel.isFinalized()){
+					Map<String, Object> JSONTravel = new HashMap<String, Object>();
+					JSONTravel.put("date", currentTravel.getDate());
+					JSONTravel.put("origin", currentTravel.getOrigin());
+					JSONTravel.put("destiny", currentTravel.getDestiny());
+					JSONTravel.put("driver", currentTravel.getDriver().getUsername());
+					JSONTravel.put("maxPassenger", currentTravel.getMaxPassengers());
+					JSONTravel.put("passengerCount", currentTravel.getPassengers().size());
+					JSONTravel.put("totalCost", currentTravel.getTotalCost());
+					// Agrego el JSON a otro json:
+					aMap.put(currentTravel.getIdTravel(), JSONTravel);
+				}	
 			}
 		}
+		
 		session.close();
-		return new Gson().toJson(aMap);
+		return this.response(HttpStatus.OK, aMap);
 	}
 
 	
