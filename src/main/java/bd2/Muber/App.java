@@ -61,6 +61,17 @@ public class App {
 		alicia.addTravel(viaje11);
 		margarita.addTravel(viaje11);
 		
+		/**** Viajes calificados ****/
+		german.addTravel(viaje1);
+		alicia.addTravel(viaje1);
+		margarita.addTravel(viaje1);
+		german.addTravel(viaje2);
+		alicia.addTravel(viaje3);
+		margarita.addTravel(viaje4);
+		german.addTravel(viaje5);
+		alicia.addTravel(viaje6);
+		margarita.addTravel(viaje7);
+		
 		/*** Calificamos para Rusia ***/
 		Qualification q1 = german.qualify(viaje1, 5, "alto viaje, me re cabio");
 		Qualification q2 = alicia.qualify(viaje1, 4, "todo bien pero el chofer durmio todo el viaje");
