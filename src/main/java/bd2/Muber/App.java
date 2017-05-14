@@ -45,7 +45,7 @@ public class App {
 		Travel viaje4 = lihuen.createTravel("La Plata", "Tres Arroyos", 6, 2000);
 		Travel viaje5 = daniel.createTravel("La Plata", "Tres Arroyos", 3, 3000);
 		Travel viaje6 = cristian.createTravel("La Plata", "Bariloche", 5, 9000);
-		Travel viaje7 = barbaro.createTravel("Buenos Aires", "Bariloche", 5, 9000);
+		Travel viaje7 = agueda.createTravel("Buenos Aires", "Bariloche", 5, 9000);
 		Travel viaje8 = jonsnow.createTravel("The Wall", "King's Landing", 2, 100000);
 		Travel viaje9 = thor.createTravel("Buenos Aires", "Montevideo", 3, 100000);
 		Travel viaje10 = loki.createTravel("New York", "Ragnarok", 3, 100000);

@@ -59,12 +59,27 @@ public class MuberRestController {
 		return session;
 	}
 	
+	protected Map<String, Object> travelToMap(Travel travel){
+		// Se devuelve los id, origen y destino del viaje.
+		Map<String, Object> travelMap = new HashMap<String, Object>();
+		travelMap.put("origin", travel.getOrigin());
+		travelMap.put("destination", travel.getDestiny());
+		return travelMap;
+	}
+	
 	protected Map<String, Object> getDriverToMap(Driver driver){
 		Map<String, Object> driverMap = new HashMap<String, Object>();
+		Map<Long, Object> travelsMap = new HashMap<Long, Object>();
 		driverMap.put("username", driver.getUsername());
 		driverMap.put("addmissionDate", driver.getAdmissionDate());
 		driverMap.put("averageScore", driver.getQualificationAverange());
 		driverMap.put("licenceExpiration", driver.getLicenceExpiration());
+		List<Travel> travels = driver.getTravels();
+		System.out.println(travels.size());
+		for (Travel currentTravel: travels){
+			travelsMap.put(currentTravel.getIdTravel(), this.travelToMap(currentTravel));
+		}
+		driverMap.put("travels", travelsMap);
 		return driverMap;
 	}
 	
@@ -167,10 +182,13 @@ public class MuberRestController {
 	/*
 	 * {
 		  "points": 2,
-		  "comment": "El Peligrwwwo",
+		  "comment": "Esto es un comentario re piola ;)",
 		  "travel" : { "idTravel": 1 },
 		  "passenger": { "idPassenger": 3 }
 		}
+		
+		O
+		curl -H "Content-Type: application/json" -X POST -d '{"points": 2, "comment": "Esto es un comentario re piola ;)", "travel" : { "idTravel": 1 }, "passenger": { "idPassenger": 3 }}' http://localhost:8080/MuberRESTful/rest/services/viajes/calificar
 	*/
 	@RequestMapping(value = "/viajes/calificar", method = RequestMethod.POST, produces = "application/json", headers = "Accept=application/json,application/xml", consumes = {"application/xml", "application/json"} )
 	public ResponseEntity<?> calificarViaje(@RequestBody Qualification qualification){	
@@ -191,17 +209,15 @@ public class MuberRestController {
 	}
 	
 	@RequestMapping(value = "/conductores/detalle/{conductorId}", method = RequestMethod.GET, produces = "application/json", headers = "Accept=application/json")
-	public String infoConductor(@PathVariable("conductorId") long conductorId){
+	public ResponseEntity<?> infoConductor(@PathVariable("conductorId") long conductorId){
 		Session session = this.getSession();
 		Driver driver = (Driver) session.get(Driver.class, conductorId);
 		if (driver != null){
-			return new Gson().toJson(this.getDriverToMap(driver));
+			return this.response(HttpStatus.OK, this.getDriverToMap(driver));
 		}
 		// Ver cómo solucionar el problema de las relaciones circulares para no usar estas funciones creadas a mano.
-		return new Gson().toJson(driver);
+		return this.response(HttpStatus.NOT_FOUND, "No existe el conductor");
 	}
-
-	
 
 	/*
 	 * {
@@ -259,7 +275,7 @@ public class MuberRestController {
 	}
 	
 	@RequestMapping(value = "/pasajeros/cargarCredito", method = RequestMethod.PUT, produces = "application/json" )
-	public ResponseEntity<?> cargarCredito(@RequestParam("passengerId") long passengerId, @RequestParam("amount") long amount){
+	public ResponseEntity<?> cargarCredito(@RequestParam("pasajeroId") long passengerId, @RequestParam("monto") long amount){
 		//System.out.println(passengerId);
 		//System.out.println(amount);
 		Session session = this.getSession();
@@ -275,7 +291,7 @@ public class MuberRestController {
 	}
 
 	@RequestMapping(value = "/viajes/finalizar", method = RequestMethod.PUT, produces = "application/json" )
-	public ResponseEntity<?> finalizarViaje(@RequestParam("travelId") long travelId){
+	public ResponseEntity<?> finalizarViaje(@RequestParam("viajeId") long travelId){
 		Session session = this.getSession();
 		Transaction t = session.beginTransaction();
 		Travel travel = (Travel) session.get(Travel.class, travelId);
