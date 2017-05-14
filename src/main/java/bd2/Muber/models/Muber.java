@@ -34,7 +34,7 @@ public class Muber {
 		}
 		top10.sort(new Comparator<Driver>() {
 			public int compare(Driver d1, Driver d2){
-				return d1.getQualificationAverange().compareTo(d2.getQualificationAverange());
+				return d2.getQualificationAverange().compareTo(d1.getQualificationAverange());
 			}
 		});
 		

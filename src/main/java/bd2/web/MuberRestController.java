@@ -62,20 +62,29 @@ public class MuberRestController {
 	protected Map<String, Object> travelToMap(Travel travel){
 		// Se devuelve los id, origen y destino del viaje.
 		Map<String, Object> travelMap = new HashMap<String, Object>();
+		travelMap.put("travelId", travel.getIdTravel());
 		travelMap.put("origin", travel.getOrigin());
 		travelMap.put("destination", travel.getDestiny());
 		return travelMap;
+	}
+
+	protected String generateJson(Object aSerializableObject){
+		// Se devuelve los id, origen y destino del viaje.
+		Map<String, Object> aMap= new HashMap<String, Object>();
+		aMap.put("result", "OK");
+		aMap.put("resultingObjects", aSerializableObject);
+		return new Gson().toJson(aMap);
 	}
 	
 	protected Map<String, Object> getDriverToMap(Driver driver){
 		Map<String, Object> driverMap = new HashMap<String, Object>();
 		Map<Long, Object> travelsMap = new HashMap<Long, Object>();
+		driverMap.put("userId", driver.getIdUser());
 		driverMap.put("username", driver.getUsername());
 		driverMap.put("addmissionDate", driver.getAdmissionDate());
 		driverMap.put("averageScore", driver.getQualificationAverange());
 		driverMap.put("licenceExpiration", driver.getLicenceExpiration());
 		List<Travel> travels = driver.getTravels();
-		System.out.println(travels.size());
 		for (Travel currentTravel: travels){
 			travelsMap.put(currentTravel.getIdTravel(), this.travelToMap(currentTravel));
 		}
@@ -85,6 +94,7 @@ public class MuberRestController {
 	
 	protected Map<String, Object> getPassengerToMap(Passenger passenger){
 		Map<String, Object> passengerMap = new HashMap<String, Object>();
+		passengerMap.put("userId", passenger.getIdUser());
 		passengerMap.put("username", passenger.getUsername());
 		passengerMap.put("admissionDate", passenger.getAdmissionDate());
 		passengerMap.put("totalCredits", passenger.getTotalCredit());
@@ -161,12 +171,13 @@ public class MuberRestController {
 				// Falta poder listar todos los pasajeros en este viaje (se puede serializar una coleccion dentro de otra?)
 				if (!currentTravel.isFinalized()){
 					Map<String, Object> JSONTravel = new HashMap<String, Object>();
+					JSONTravel.put("idTravel", currentTravel.getIdTravel());
 					JSONTravel.put("date", currentTravel.getDate());
 					JSONTravel.put("origin", currentTravel.getOrigin());
 					JSONTravel.put("destiny", currentTravel.getDestiny());
 					JSONTravel.put("driver", currentTravel.getDriver().getUsername());
 					JSONTravel.put("maxPassenger", currentTravel.getMaxPassengers());
-					JSONTravel.put("passengerCount", currentTravel.getPassengers().size());
+					JSONTravel.put("passengerCount", currentTravel.getPassengerCount());
 					JSONTravel.put("totalCost", currentTravel.getTotalCost());
 					// Agrego el JSON a otro json:
 					aMap.put(currentTravel.getIdTravel(), JSONTravel);
@@ -276,8 +287,6 @@ public class MuberRestController {
 	
 	@RequestMapping(value = "/pasajeros/cargarCredito", method = RequestMethod.PUT, produces = "application/json" )
 	public ResponseEntity<?> cargarCredito(@RequestParam("pasajeroId") long passengerId, @RequestParam("monto") long amount){
-		//System.out.println(passengerId);
-		//System.out.println(amount);
 		Session session = this.getSession();
 		Transaction t = session.beginTransaction();
 		Passenger passenger = (Passenger) session.get(Passenger.class, passengerId);
@@ -287,7 +296,7 @@ public class MuberRestController {
 		passenger.setTotalCredit(passenger.getTotalCredit() + amount);
 		t.commit();
 		session.close();
-		return ResponseEntity.status(HttpStatus.OK).body(null); //devolver passenger
+		return this.response(HttpStatus.OK, this.getPassengerToMap(passenger));
 	}
 
 	@RequestMapping(value = "/viajes/finalizar", method = RequestMethod.PUT, produces = "application/json" )
@@ -312,8 +321,8 @@ public class MuberRestController {
 		Session session = this.getSession();
 		List<Driver> top10 = this.getMuber(session).getTop10DriversWithoutOpenTravels();
 		Map<Long, Object> aMap = new HashMap<Long, Object>();
-		for ( Driver currentDriver : top10 ){
-			aMap.put(currentDriver.getIdUser(), this.getDriverToMap(currentDriver));
+		for (int i = 0; i < top10.size(); i++) {
+			aMap.put((long) i, this.getDriverToMap(top10.get(i)));
 		}
 		session.close();
 		return this.response(HttpStatus.OK, aMap);
