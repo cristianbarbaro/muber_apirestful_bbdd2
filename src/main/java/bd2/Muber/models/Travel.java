@@ -38,6 +38,10 @@ public class Travel {
 		return true;
 	}
 	
+	public int getPassengerCount() {
+		return this.passengers.size();
+	}
+	
 	public void finalize() {
 		this.finalized = true;
 		float cost = this.totalCost / this.passengers.size();
