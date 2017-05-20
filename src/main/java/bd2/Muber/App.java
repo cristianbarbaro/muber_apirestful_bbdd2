@@ -161,7 +161,10 @@ public class App {
 		Iterator<?> keys = users.keys();
 		while( keys.hasNext() ) {
 		    String key = (String) keys.next();
-		    return users.getJSONObject(key).getLong("userId");
+		    if (users.getJSONObject(key).getString("username").equals(username))
+		    {
+		    	return users.getJSONObject(key).getLong("userId");
+		    }
 		}
 	    return null;
 	}
