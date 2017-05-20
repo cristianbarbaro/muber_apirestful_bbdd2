@@ -11,6 +11,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Projections;
 import org.hibernate.service.ServiceRegistry;
+import org.json.JSONObject;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -40,11 +41,16 @@ public class App {
 		//String result = restTemplate.getForObject(url, String.class);
 		//System.out.println("SALIDA");
 		//System.out.println(result);
-		
-		/*** a) Crear nuevo viaje: ***/		
+
+	    /************************ Inciso A ***********************/
 		Long idRoberto = getIdDriver("roberto");
 		// Creo que el JSON que envaré por POST.
-		String input = String.format("{ \"destiny\": \"Mar del Plata\", \"origin\": \"Cordoba\", \"maxPassengers\" : 4, \"totalCost\" : 3500, \"driver\": { \"idDriver\": %1$d } }", idRoberto);
+		String input = String.format("{ \"destiny\": \"Mar del Plata\","
+				+ " \"origin\": \"Cordoba\","
+				+ " \"maxPassengers\" : 4,"
+				+ " \"totalCost\" : 3500,"
+				+ " \"driver\": { \"idDriver\": %1$d } }",
+				idRoberto);
 				
 		url = uri + "viajes/nuevo";
 		// Configuro los headers.
@@ -52,56 +58,104 @@ public class App {
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		// Ejecuto el POST y obtengo el resultado. response contiene los datos obtenidos. 
 		HttpEntity<String> entity = new HttpEntity<String>(input, headers);
-	    ResponseEntity<String> response = restTemplate
-	            .exchange(url, HttpMethod.POST, entity, String.class);
+		ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+	    JSONObject jsonResponse = new JSONObject(response.getBody());
+	    JSONObject viaje = jsonResponse.getJSONObject("message");
 	    System.out.println(response);
 	    
-	    /*** Inciso b) ***/
+	    
+	    /************************ Inciso B ***********************/
 	    // Margarita carga saldo a su cuenta:
 	    url = uri + "pasajeros/cargarCredito";
 	    Long idMargarita = getIdPassenger("margarita");
-	    
-	    input = "{ \"idPasajero\": 1, \"monto\" : 4000 }";
-	    
-	    Map<String, String> params = new HashMap<String, String>();
-	    params.put("pasajeroId", idMargarita.toString());
-	    params.put("monto", "3500");
-	    
-	    headers.setContentType(MediaType.APPLICATION_XML);
-	    entity = new HttpEntity(input, null);
-	    
-		//entity = new HttpEntity<String>(input, headers);
-	    response = restTemplate
-	            .exchange(url, HttpMethod.PUT, entity, String.class);
-	    
+	    input = String.format("pasajeroId=%1$d&monto=4000", idMargarita);
+		headers = new HttpHeaders();
+		headers.set("content-type", "application/x-www-form-urlencoded");
+		entity = new HttpEntity<String>(input, headers);
+		response = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
 	    System.out.println(response);
+
+	    // Margarita se suma al viaje:
+	    url = uri + "viajes/agregarPasajero";
+	    input = String.format("viajeId=%1$d&pasajeroId=%2$d", viaje.get("travelId"), idMargarita);
+		headers = new HttpHeaders();
+		headers.set("content-type", "application/x-www-form-urlencoded");
+		entity = new HttpEntity<String>(input, headers);
+		response = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
+	    System.out.println(response);
+
+	    // Hugo se suma al viaje:
+	    Long idHugo = getIdPassenger("hugo");
+	    url = uri + "viajes/agregarPasajero";
+	    input = String.format("viajeId=%1$d&pasajeroId=%2$d", viaje.get("travelId"), idHugo);
+		headers = new HttpHeaders();
+		headers.set("content-type", "application/x-www-form-urlencoded");
+		entity = new HttpEntity<String>(input, headers);
+		response = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
+	    System.out.println(response);
+	    
+
+	    /************************ Inciso C ***********************/
+	    // Margarita califica el viaje:
+	    url = uri + "viajes/calificar";
+		input = String.format("{ \"points\": 4,"
+				+ " \"comment\": \"Me gusto viajar con Hugo ;)\","
+				+ " \"travel\":  { \"idTravel\": %1$d },"
+				+ " \"passenger\":  { \"idPassenger\": %2$d } }",
+				viaje.get("travelId"), 
+				idMargarita);
+		headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		entity = new HttpEntity<String>(input, headers);
+		response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+	    System.out.println(response);
+
+	    // Hugo califica el viaje:
+	    url = uri + "viajes/calificar";
+		input = String.format("{ \"points\": 5,"
+				+ " \"comment\": \"Creo que Margarita me tiró onda\","
+				+ " \"travel\":  { \"idTravel\": %1$d },"
+				+ " \"passenger\":  { \"idPassenger\": %2$d } }",
+				viaje.get("travelId"), 
+				idHugo);
+		headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		entity = new HttpEntity<String>(input, headers);
+		response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+	    System.out.println(response);
+	    
+
+	    /************************ Inciso D ***********************/
+	    // Se finaliza el viaje:
+	    url = uri + "viajes/finalizar";
+	    input = String.format("viajeId=%1$d", viaje.get("travelId"));
+		headers = new HttpHeaders();
+		headers.set("content-type", "application/x-www-form-urlencoded");
+		entity = new HttpEntity<String>(input, headers);
+		response = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
+	    System.out.println(response);
+
 
 	}
 	
 	private static Long getIdDriver(String username) {
 		Muber muber = getMuber(getSession());
-		Long idDriver = (long) 0;
 		for (Driver currentDriver: muber.getDrivers()){
-			System.out.println(currentDriver.getUsername());
 			if (currentDriver.getUsername().equals(username)){
-				idDriver = currentDriver.getIdUser();
-				break;
+				return currentDriver.getIdUser();
 			}
 		}
-		return idDriver;
+		return null;
 	}
 	
 	private static Long getIdPassenger(String username) {
 		Muber muber = getMuber(getSession());
-		Long idPassenger = (long) 0;
-		for (Driver currentPassenger: muber.getDrivers()){
-			System.out.println(currentPassenger.getUsername());
+		for (Passenger currentPassenger: muber.getPassengers()){
 			if (currentPassenger.getUsername().equals(username)){
-				idPassenger = currentPassenger.getIdUser();
-				break;
+				return currentPassenger.getIdUser();
 			}
 		}
-		return idPassenger;
+		return null;
 	}
 
 	public static Session getSession(){

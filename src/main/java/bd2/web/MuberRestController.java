@@ -258,7 +258,7 @@ public class MuberRestController {
 		muber.addTravel(travel);
 		t.commit();
 		session.close();
-		return this.response();
+		return this.response(HttpStatus.OK, travelToMap(travel));
 	}
 
 	@RequestMapping(value = "/viajes/agregarPasajero", method = RequestMethod.PUT, produces = "application/json")
