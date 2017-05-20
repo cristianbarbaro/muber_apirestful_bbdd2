@@ -2,6 +2,7 @@ package bd2.Muber;
 
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.Criteria;
@@ -38,12 +39,32 @@ public class App {
 		String uri = "http://localhost:8080/MuberRESTful/rest/services/";
 		String url;
 		RestTemplate restTemplate = new RestTemplate();
-		//String result = restTemplate.getForObject(url, String.class);
-		//System.out.println("SALIDA");
-		//System.out.println(result);
+
+		// Obtengo pasajeros para utilizar luego
+		url = uri + "pasajeros";
+		// Configuro los headers.
+		HttpHeaders headers = new HttpHeaders();
+		// Ejecuto el POST y obtengo el resultado. response contiene los datos obtenidos. 
+		HttpEntity<String> entity = new HttpEntity<String>("", headers);
+		ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+	    JSONObject jsonResponse = new JSONObject(response.getBody());
+	    JSONObject pasajeros = jsonResponse.getJSONObject("message");
+	    System.out.println(response);
+
+		// Obtengo conductores para utilizar luego
+		url = uri + "conductores";
+		// Configuro los headers.
+		headers = new HttpHeaders();
+		// Ejecuto el POST y obtengo el resultado. response contiene los datos obtenidos. 
+		entity = new HttpEntity<String>("", headers);
+		response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+	    jsonResponse = new JSONObject(response.getBody());
+	    JSONObject conductores = jsonResponse.getJSONObject("message");
+	    System.out.println(response);
+		
 
 	    /************************ Inciso A ***********************/
-		Long idRoberto = getIdDriver("roberto");
+		Long idRoberto = searchUserId(conductores, "roberto");
 		// Creo que el JSON que envaré por POST.
 		String input = String.format("{ \"destiny\": \"Mar del Plata\","
 				+ " \"origin\": \"Cordoba\","
@@ -54,12 +75,12 @@ public class App {
 				
 		url = uri + "viajes/nuevo";
 		// Configuro los headers.
-		HttpHeaders headers = new HttpHeaders();
+		headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		// Ejecuto el POST y obtengo el resultado. response contiene los datos obtenidos. 
-		HttpEntity<String> entity = new HttpEntity<String>(input, headers);
-		ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-	    JSONObject jsonResponse = new JSONObject(response.getBody());
+		entity = new HttpEntity<String>(input, headers);
+		response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+	    jsonResponse = new JSONObject(response.getBody());
 	    JSONObject viaje = jsonResponse.getJSONObject("message");
 	    System.out.println(response);
 	    
@@ -67,7 +88,7 @@ public class App {
 	    /************************ Inciso B ***********************/
 	    // Margarita carga saldo a su cuenta:
 	    url = uri + "pasajeros/cargarCredito";
-	    Long idMargarita = getIdPassenger("margarita");
+	    Long idMargarita = searchUserId(pasajeros, "margarita");
 	    input = String.format("pasajeroId=%1$d&monto=4000", idMargarita);
 		headers = new HttpHeaders();
 		headers.set("content-type", "application/x-www-form-urlencoded");
@@ -85,7 +106,7 @@ public class App {
 	    System.out.println(response);
 
 	    // Hugo se suma al viaje:
-	    Long idHugo = getIdPassenger("hugo");
+	    Long idHugo = searchUserId(pasajeros, "hugo");
 	    url = uri + "viajes/agregarPasajero";
 	    input = String.format("viajeId=%1$d&pasajeroId=%2$d", viaje.get("travelId"), idHugo);
 		headers = new HttpHeaders();
@@ -134,8 +155,15 @@ public class App {
 		entity = new HttpEntity<String>(input, headers);
 		response = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
 	    System.out.println(response);
-
-
+	}
+	
+	private static Long searchUserId(JSONObject users, String username) {
+		Iterator<?> keys = users.keys();
+		while( keys.hasNext() ) {
+		    String key = (String) keys.next();
+		    return users.getJSONObject(key).getLong("userId");
+		}
+	    return null;
 	}
 	
 	private static Long getIdDriver(String username) {

@@ -78,17 +78,17 @@ public class MuberRestController {
 	
 	protected Map<String, Object> getDriverToMap(Driver driver){
 		Map<String, Object> driverMap = new HashMap<String, Object>();
-		Map<Long, Object> travelsMap = new HashMap<Long, Object>();
+		//Map<Long, Object> travelsMap = new HashMap<Long, Object>();
 		driverMap.put("userId", driver.getIdUser());
 		driverMap.put("username", driver.getUsername());
 		driverMap.put("addmissionDate", driver.getAdmissionDate());
 		driverMap.put("averageScore", driver.getQualificationAverange());
 		driverMap.put("licenceExpiration", driver.getLicenceExpiration());
-		List<Travel> travels = driver.getTravels();
-		for (Travel currentTravel: travels){
-			travelsMap.put(currentTravel.getIdTravel(), this.travelToMap(currentTravel));
-		}
-		driverMap.put("travels", travelsMap);
+		//List<Travel> travels = driver.getTravels();
+		//for (Travel currentTravel: travels){
+		//	travelsMap.put(currentTravel.getIdTravel(), this.travelToMap(currentTravel));
+		//}
+		//driverMap.put("travels", travelsMap);
 		return driverMap;
 	}
 	
